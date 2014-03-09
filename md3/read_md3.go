@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 )
 
@@ -52,20 +51,13 @@ type fileHeader struct {
 	ofs_eof      int32
 }
 
-func Read(r io.Reader) (*Model, error) {
+func Read(data []byte) (*Model, error) {
 	var (
 		header *fileHeader
 		err    error
-		data   []byte
 	)
 
-	data, err = ioutil.ReadAll(r)
-	if err != nil {
-		log.Println("Error reading data buffer:", err)
-		return nil, err
-	}
-
-	r = bytes.NewReader(data)
+	r := bytes.NewReader(data)
 	header, err = readMD3Header(r)
 	if err != nil {
 		log.Println("Error reading header:", err)

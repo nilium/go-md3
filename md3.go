@@ -3,16 +3,33 @@ package main
 import (
 	"flag"
 	"github.com/nilium/go-md3/md3"
-	"io"
+	"io/ioutil"
 	"log"
 	"os"
 )
 
-func readerForPath(path string) (io.Reader, error) {
+func dataForPath(path string) ([]byte, error) {
 	if path == "-" {
-		return os.Stdin, nil
+		return ioutil.ReadAll(os.Stdin)
 	} else {
-		return os.Open(path)
+		var buf []byte
+		var file *os.File
+		var err error
+
+		file, err = os.Open(path)
+		if err != nil {
+			return nil, err
+		}
+
+		buf, err = ioutil.ReadAll(file)
+		if err != nil {
+			if closeErr := file.Close(); closeErr != nil {
+				log.Println("Error closing file %q:", path, closeErr)
+			}
+			return buf, err
+		}
+
+		return buf, file.Close()
 	}
 }
 
@@ -26,16 +43,16 @@ func main() {
 		go func(path string, output chan<- *md3.Model) {
 			var model *md3.Model
 			var err error
-			var r io.Reader
-			r, err = readerForPath(path)
+			var data []byte
+			data, err = dataForPath(path)
 
 			if err != nil {
-				log.Printf("Error creating reader for path %q:\n%s", path, err)
+				log.Printf("Error reading data for path %q:\n%s", path, err)
 				output <- nil
 				return
 			}
 
-			model, err = md3.Read(r)
+			model, err = md3.Read(data)
 			if err != nil {
 				log.Printf("Error reading MD3 header %q:\n%s", path, err)
 			}
