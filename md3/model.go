@@ -118,12 +118,12 @@ func (s *Surface) Triangle(index int) Triangle {
 
 func (s *Surface) Triangles() <-chan Triangle {
 	output := make(chan Triangle)
-	go func() {
+	go func(s *Surface, output chan<- Triangle) {
 		for _, tri := range s.triangles {
 			output <- tri
 		}
 		close(output)
-	}()
+	}(s, output)
 	return output
 }
 
@@ -133,12 +133,12 @@ func (s *Surface) Vertex(frame, index int) Vertex {
 
 func (s *Surface) Vertices(frame int) <-chan Vertex {
 	output := make(chan Vertex)
-	go func() {
+	go func(s *Surface, output chan<- Vertex) {
 		for _, vert := range s.vertices[frame] {
 			output <- vert
 		}
 		close(output)
-	}()
+	}(s, output)
 	return output
 }
 
@@ -148,12 +148,12 @@ func (s *Surface) TexCoord(index int) TexCoord {
 
 func (s *Surface) TexCoords() <-chan TexCoord {
 	output := make(chan TexCoord)
-	go func() {
+	go func(s *Surface, output chan<- TexCoord) {
 		for _, texcoord := range s.texcoords {
 			output <- texcoord
 		}
 		close(output)
-	}()
+	}(s, output)
 	return output
 }
 
@@ -163,12 +163,12 @@ func (s *Surface) Shader(index int) Shader {
 
 func (s *Surface) Shaders() <-chan Shader {
 	output := make(chan Shader)
-	go func() {
+	go func(s *Surface, output chan<- Shader) {
 		for _, shader := range s.shaders {
 			output <- shader
 		}
 		close(output)
-	}()
+	}(s, output)
 	return output
 }
 
@@ -209,12 +209,12 @@ func (m *Model) Tag(index int) *Tag {
 
 func (m *Model) Surfaces() <-chan *Surface {
 	output := make(chan *Surface)
-	go func() {
+	go func(m *Model, output chan<- *Surface) {
 		for _, surface := range m.surfaces {
 			output <- surface
 		}
 		close(output)
-	}()
+	}(m, output)
 	return output
 }
 
