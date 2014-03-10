@@ -1,19 +1,66 @@
 package md3
 
 type Frame struct {
-	Name   string
-	Min    Vec3
-	Max    Vec3
-	Origin Vec3
-	Radius float32
+	name   string
+	min    Vec3
+	max    Vec3
+	origin Vec3
+	radius float32
 }
 
-type Tag struct {
-	Name         string
+func (f *Frame) Name() string {
+	return f.name
+}
+
+func (f *Frame) Min() Vec3 {
+	return f.min
+}
+
+func (f *Frame) Max() Vec3 {
+	return f.max
+}
+
+func (f *Frame) Origin() Vec3 {
+	return f.origin
+}
+
+func (f *Frame) Radius() float32 {
+	return f.radius
+}
+
+type TagFrame struct {
 	Origin       Vec3
 	XOrientation Vec3
 	YOrientation Vec3
 	ZOrientation Vec3
+}
+
+type Tag struct {
+	name   string
+	frames []TagFrame
+}
+
+func (t *Tag) Name() string {
+	return t.name
+}
+
+func (t *Tag) NumFrames() int {
+	return len(t.frames)
+}
+
+func (t *Tag) Frame(frame int) TagFrame {
+	return t.frames[frame]
+}
+
+func (t *Tag) Frames() <-chan TagFrame {
+	output := make(chan TagFrame)
+	go func(t *Tag, output chan<- TagFrame) {
+		for _, frame := range t.frames {
+			output <- frame
+		}
+		close(output)
+	}(t, output)
+	return output
 }
 
 type Triangle struct {
@@ -127,8 +174,8 @@ func (s *Surface) Shaders() <-chan Shader {
 
 type Model struct {
 	name     string
-	frames   []Frame
-	tags     []Tag
+	frames   []*Frame
+	tags     []*Tag
 	surfaces []*Surface
 }
 
@@ -152,11 +199,11 @@ func (m *Model) Surface(index int) *Surface {
 	return m.surfaces[index]
 }
 
-func (m *Model) Frame(index int) Frame {
+func (m *Model) Frame(index int) *Frame {
 	return m.frames[index]
 }
 
-func (m *Model) Tag(index int) Tag {
+func (m *Model) Tag(index int) *Tag {
 	return m.tags[index]
 }
 
@@ -171,24 +218,24 @@ func (m *Model) Surfaces() <-chan *Surface {
 	return output
 }
 
-func (m *Model) Frames() <-chan Frame {
-	output := make(chan Frame)
-	go func() {
+func (m *Model) Frames() <-chan *Frame {
+	output := make(chan *Frame)
+	go func(m *Model, output chan<- *Frame) {
 		for _, frame := range m.frames {
 			output <- frame
 		}
 		close(output)
-	}()
+	}(m, output)
 	return output
 }
 
-func (m *Model) Tags() <-chan Tag {
-	output := make(chan Tag)
-	go func() {
+func (m *Model) Tags() <-chan *Tag {
+	output := make(chan *Tag)
+	go func(m *Model, output chan<- *Tag) {
 		for _, tag := range m.tags {
 			output <- tag
 		}
 		close(output)
-	}()
+	}(m, output)
 	return output
 }

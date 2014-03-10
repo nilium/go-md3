@@ -68,7 +68,7 @@ func Read(data []byte) (*Model, error) {
 	surfaces := make([]*Surface, 0, 1)
 
 	surfaceOutput := readSurfaceList(data[header.ofs_surfaces:], int(header.num_surfaces))
-	tagOutput := readTagList(data[header.ofs_tags:], int(header.num_tags))
+	tagOutput := readTagList(data[header.ofs_tags:], int(header.num_tags), int(header.num_frames))
 
 	for completions := header.num_surfaces + 1; completions > 0; completions-- {
 		select {
@@ -86,52 +86,71 @@ func Read(data []byte) (*Model, error) {
 	return model, nil
 }
 
-func readTagList(data []byte, count int) <-chan []Tag {
-	output := make(chan []Tag)
+func readTagList(data []byte, count int, numFrames int) <-chan []*Tag {
+	output := make(chan []*Tag)
 
-	go func() {
+	go func(output chan<- []*Tag) {
+		// defer close(output)
+
 		r := bytes.NewReader(data)
-		tags := make([]Tag, count)
+		tagMap := make(map[string]*Tag)
+		tags := make([]*Tag, 0, count)
+		var ok bool
+		var tag *Tag
+		var frame TagFrame
+		var name string
+		var err error
+		var numTagsToRead = count * numFrames
 
-		for x := range tags {
-			var err error
-			tags[x], err = readTag(r)
+		for i := 0; i < numTagsToRead; i++ {
+			name, frame, err = readTag(r)
+
 			if err != nil {
 				log.Println("Error reading tag list:", err)
 				break
 			}
+
+			if tag, ok = tagMap[name]; !ok {
+				tag = new(Tag)
+				tag.name = name
+				tags = append(tags, tag)
+				tagMap[name] = tag
+			}
+
+			tag.frames = append(tag.frames, frame)
 		}
 
 		output <- tags
-	}()
+	}(output)
 
 	return output
 }
 
-func readTag(r io.Reader) (Tag, error) {
+func readTag(r io.Reader) (string, TagFrame, error) {
 	var err error
-	tag := Tag{}
+	var name string
+	var frame TagFrame
 
-	tag.Name, err = readNulString(r, maxQPath)
+	name, err = readNulString(r, maxQPath)
 	if err != nil {
-		return tag, err
+		return name, frame, err
 	}
 
 	vecPointers := []*Vec3{
-		&tag.Origin,
-		&tag.XOrientation,
-		&tag.YOrientation,
-		&tag.ZOrientation,
+		&frame.Origin,
+		&frame.XOrientation,
+		&frame.YOrientation,
+		&frame.ZOrientation,
 	}
 
 	for _, ptr := range vecPointers {
 		*ptr, err = readF32Vec3(r)
 		if err != nil {
-			return tag, err
+			return name, frame, err
 		}
 	}
 
-	return tag, nil
+	return name, frame, nil
 }
 
 func readMD3Header(r io.Reader) (*fileHeader, error) {
