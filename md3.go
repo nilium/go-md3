@@ -3,26 +3,26 @@ package main
 import (
 	"flag"
 	"github.com/nilium/go-md3/md3"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
 )
 
 func dataForPath(path string) ([]byte, error) {
+	var r io.Reader
 	if path == "-" {
-		return ioutil.ReadAll(os.Stdin)
+		r = os.Stdin
 	} else {
-		var err error
-
 		file, err := os.Open(path)
 		if err != nil {
 			return nil, err
 		}
-
+		r = file
 		defer file.Close()
-
-		return ioutil.ReadAll(file)
 	}
+
+	return ioutil.ReadAll(r)
 }
 
 func main() {
