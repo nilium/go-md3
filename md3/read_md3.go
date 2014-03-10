@@ -427,7 +427,7 @@ type frameAndVertices struct {
 func readVertexFrames(data []byte, numVertices, numFrames int) <-chan [][]Vertex {
 	output := make(chan [][]Vertex)
 
-	go func(data []byte) {
+	go func(data []byte, output chan<- [][]Vertex) {
 		var (
 			frameVertices = make([][]Vertex, numFrames)
 			frameReceiver = make(chan frameAndVertices)
@@ -452,7 +452,7 @@ func readVertexFrames(data []byte, numVertices, numFrames int) <-chan [][]Vertex
 		}
 
 		output <- frameVertices
-	}(data)
+	}(data, output)
 
 	return output
 }
