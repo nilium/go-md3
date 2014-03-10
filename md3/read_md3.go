@@ -163,7 +163,7 @@ func readMD3Header(r io.Reader) (*fileHeader, error) {
 		return nil, err
 	}
 
-	s32Fields := []*int32{
+	var s32Fields = [...]*int32{
 		&header.flags,
 		&header.num_frames,
 		&header.num_tags,
@@ -203,7 +203,7 @@ func readSurfaceHeader(r io.Reader) (*surfaceHeader, error) {
 		return nil, err
 	}
 
-	s32Fields := []*int32{
+	var s32Fields = [...]*int32{
 		&header.flags,
 		&header.num_frames,
 		&header.num_shaders,
