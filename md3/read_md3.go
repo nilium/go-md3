@@ -71,6 +71,7 @@ func Read(data []byte) (*Model, error) {
 
 	surfaceOutput := readSurfaceList(data[header.ofs_surfaces:], int(header.num_surfaces))
 	tagOutput := readTagList(data[header.ofs_tags:], int(header.num_tags), int(header.num_frames))
+	frameOutput := readFrameList(data[header.ofs_frames:], int(header.num_frames))
 
 	for completions := header.num_surfaces + 1; completions > 0; completions-- {
 		select {
@@ -80,6 +81,8 @@ func Read(data []byte) (*Model, error) {
 			}
 		case tags := <-tagOutput:
 			model.tags = tags
+		case frames := <-frameOutput:
+			model.frames = frames
 		}
 	}
 
@@ -450,6 +453,56 @@ func readVertexFrames(data []byte, numVertices, numFrames int) <-chan [][]Vertex
 
 		output <- frameVertices
 	}(data)
+
+	return output
+}
+
+func readFrame(r io.Reader) (*Frame, error) {
+	var err error
+	frame := new(Frame)
+
+	frame.name, err = readNulString(r, maxFrameLength)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, ptr := range []*Vec3{&frame.min, &frame.max, &frame.origin} {
+		*ptr, err = readF32Vec3(r)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	frame.radius, err = readF32(r)
+	if err != nil {
+		return nil, err
+	}
+
+	return frame, nil
+}
+
+func readFrameList(data []byte, count int) <-chan []*Frame {
+	output := make(chan []*Frame)
+
+	go func(output chan<- []*Frame) {
+		// defer close(output)
+
+		var err error
+		reader := bytes.NewReader(data)
+		frames := make([]*Frame, count)
+
+		for index := range frames {
+			frames[index], err = readFrame(reader)
+
+			if err != nil {
+				log.Println("Error reading frame list:", err)
+				frames = nil
+				break
+			}
+		}
+
+		output <- frames
+	}(output)
 
 	return output
 }
