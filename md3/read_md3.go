@@ -323,9 +323,9 @@ func readShaderList(data []byte, count int) <-chan []Shader {
 	output := make(chan []Shader)
 	go func() {
 		var err error
-		tcs := make([]Shader, count)
+		shaders := make([]Shader, count)
 		r := bytes.NewReader(data)
-		for index := range tcs {
+		for index := range shaders {
 			shader := Shader{}
 
 			shader.Name, err = readNulString(r, maxQPath)
@@ -338,14 +338,14 @@ func readShaderList(data []byte, count int) <-chan []Shader {
 				break
 			}
 
-			tcs[index] = shader
+			shaders[index] = shader
 		}
 
 		if err != nil {
 			log.Println("Error reading shaders:", err)
 		}
 
-		output <- tcs
+		output <- shaders
 	}()
 	return output
 }
