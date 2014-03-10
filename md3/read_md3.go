@@ -141,7 +141,7 @@ func readTag(r io.Reader) (string, TagFrame, error) {
 		return name, frame, err
 	}
 
-	vecPointers := []*Vec3{
+	vecPointers := [...]*Vec3{
 		&frame.Origin,
 		&frame.XOrientation,
 		&frame.YOrientation,
@@ -187,7 +187,7 @@ func readMD3Header(r io.Reader) (*fileHeader, error) {
 		return nil, err
 	}
 
-	var s32Fields = [...]*int32{
+	s32Fields := [...]*int32{
 		&header.flags,
 		&header.num_frames,
 		&header.num_tags,
@@ -227,7 +227,7 @@ func readSurfaceHeader(r io.Reader) (*surfaceHeader, error) {
 		return nil, err
 	}
 
-	var s32Fields = [...]*int32{
+	s32Fields := [...]*int32{
 		&header.flags,
 		&header.num_frames,
 		&header.num_shaders,
