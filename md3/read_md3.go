@@ -276,45 +276,43 @@ func readXYZNormals(r io.Reader, count int) ([]Vertex, error) {
 	return vertices, nil
 }
 
+func readTriangle(r io.Reader) (Triangle, error) {
+	var err error
+	var tri Triangle
+
+	for _, ptr := range []*int32{&tri.A, &tri.B, &tri.C} {
+		if *ptr, err = readS32(r); err != nil {
+			break
+		}
+	}
+
+	return tri, err
+}
+
 func readTriangleList(data []byte, count int) <-chan []Triangle {
 	output := make(chan []Triangle)
-	go func() {
+	go func(output chan<- []Triangle) {
 		var err error
 		tris := make([]Triangle, count)
 		r := bytes.NewReader(data)
 		for index := range tris {
-			tri := Triangle{}
+			tris[index], err = readTriangle(r)
 
-			tri.A, err = readS32(r)
 			if err != nil {
-				break
+				output <- nil
+				log.Println("Error reading triangles:", err)
+				return
 			}
-
-			tri.B, err = readS32(r)
-			if err != nil {
-				break
-			}
-
-			tri.C, err = readS32(r)
-			if err != nil {
-				break
-			}
-
-			tris[index] = tri
-		}
-
-		if err != nil {
-			log.Println("Error reading triangles:", err)
 		}
 
 		output <- tris
-	}()
+	}(output)
 	return output
 }
 
 func readTexCoordList(data []byte, count int) <-chan []TexCoord {
 	output := make(chan []TexCoord)
-	go func() {
+	go func(output chan<- []TexCoord) {
 		var err error
 		tcs := make([]TexCoord, count)
 		r := bytes.NewReader(data)
