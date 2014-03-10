@@ -16,8 +16,8 @@ type Vec3 struct {
 }
 
 func readU8(r io.Reader) (uint8, error) {
-	b := make([]byte, 1)
-	_, err := r.Read(b)
+	var b [1]byte
+	_, err := r.Read(b[:])
 	return b[0], err
 }
 
@@ -25,17 +25,16 @@ func readS16(r io.Reader) (int16, error) {
 	var err error
 	var n int
 	var result int16
+	var b [2]byte
 
-	b := make([]byte, 2)
-
-	n, err = r.Read(b)
+	n, err = r.Read(b[:])
 	if err != nil {
 		return result, err
 	} else if n != 2 {
 		return result, fmt.Errorf("Failed to read int16")
 	}
 
-	err = binary.Read(bytes.NewReader(b), binary.LittleEndian, &result)
+	err = binary.Read(bytes.NewReader(b[:]), binary.LittleEndian, &result)
 	if err != nil {
 		log.Println("binary.Read failed:", err)
 	}
@@ -46,17 +45,16 @@ func readS32(r io.Reader) (int32, error) {
 	var err error
 	var n int
 	var result int32
+	var b [4]byte
 
-	b := make([]byte, 4)
-
-	n, err = r.Read(b)
+	n, err = r.Read(b[:])
 	if err != nil {
 		return result, err
 	} else if n != 4 {
 		return result, fmt.Errorf("Failed to read int32")
 	}
 
-	err = binary.Read(bytes.NewReader(b), binary.LittleEndian, &result)
+	err = binary.Read(bytes.NewReader(b[:]), binary.LittleEndian, &result)
 	if err != nil {
 		log.Println("binary.Read failed:", err)
 	}
@@ -67,17 +65,16 @@ func readF32(r io.Reader) (float32, error) {
 	var err error
 	var n int
 	var result float32
+	var b [4]byte
 
-	b := make([]byte, 4)
-
-	n, err = r.Read(b)
+	n, err = r.Read(b[:])
 	if err != nil {
 		return result, err
 	} else if n != 4 {
 		return result, fmt.Errorf("Failed to read float32")
 	}
 
-	err = binary.Read(bytes.NewReader(b), binary.LittleEndian, &result)
+	err = binary.Read(bytes.NewReader(b[:]), binary.LittleEndian, &result)
 	if err != nil {
 		log.Println("binary.Read failed:", err)
 	}
