@@ -380,55 +380,55 @@ func readSurfaceList(data []byte, count int) <-chan *Surface {
 }
 
 func readSurface(h *surfaceHeader, data []byte) (*Surface, error) {
-	var err error
 	surface := new(Surface)
-	completions := h.num_frames + 3
-
-	_ = err
 
 	triangleOutput := readTriangleList(data[h.ofs_triangles:], int(h.num_triangles))
 	shaderOutput := readShaderList(data[h.ofs_shaders:], int(h.num_shaders))
 	texcoordOutput := readTexCoordList(data[h.ofs_st:], int(h.num_verts))
+	verticesOutput := readVertexFrames(data[h.ofs_xyznormal:], int(h.num_frames), int(h.num_verts))
 
-	vertexCompletion := make(chan func(frames [][]Vertex))
-	surface.vertices = make([][]Vertex, h.num_frames)
-	vdataStart := data[h.ofs_xyznormal:]
-	vdataSize := int(h.num_verts) * md3VertexSize
-
-	for frame := range surface.vertices {
-		from := frame * vdataSize
-		to := (frame + 1) * vdataSize
-		vdata := vdataStart[from:to]
-
-		go func(index int, data []byte) {
-			var localErr error
-			var vertices []Vertex
-			vertReader := bytes.NewReader(data)
-			vertices, localErr = readXYZNormals(vertReader, int(h.num_verts))
-
-			if localErr != nil {
-				log.Println("Error reading vertex data: ", localErr)
-				vertexCompletion <- nil
-				return
-			}
-
-			vertexCompletion <- func(frames [][]Vertex) { frames[index] = vertices }
-		}(frame, vdata)
-	}
-
-	for completions > 0 {
-		select {
-		case vfunc := <-vertexCompletion:
-			vfunc(surface.vertices)
-		case tris := <-triangleOutput:
-			surface.triangles = tris
-		case tcs := <-texcoordOutput:
-			surface.texcoords = tcs
-		case shaders := <-shaderOutput:
-			surface.shaders = shaders
-		}
-		completions--
-	}
+	surface.vertices = <-verticesOutput
+	surface.triangles = <-triangleOutput
+	surface.texcoords = <-texcoordOutput
+	surface.shaders = <-shaderOutput
 
 	return surface, nil
+}
+
+type frameAndVertices struct {
+	index    int
+	vertices []Vertex
+}
+
+func readVertexFrames(data []byte, numVertices, numFrames int) <-chan [][]Vertex {
+	output := make(chan [][]Vertex)
+
+	go func(data []byte) {
+		var (
+			frameVertices = make([][]Vertex, numFrames)
+			frameReceiver = make(chan frameAndVertices)
+			frameSize     = numVertices * md3VertexSize
+		)
+
+		for frame := range frameVertices {
+			go func(frame int, data []byte) {
+				reader := bytes.NewReader(data)
+				vertices, err := readXYZNormals(reader, numVertices)
+				if err != nil {
+					log.Println("Error reading vertices:", err)
+				}
+				frameReceiver <- frameAndVertices{frame, vertices}
+			}(frame, data[:frameSize])
+			data = data[frameSize:]
+		}
+
+		for _ = range frameVertices {
+			pack := <-frameReceiver
+			frameVertices[pack.index] = pack.vertices
+		}
+
+		output <- frameVertices
+	}(data)
+
+	return output
 }
