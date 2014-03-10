@@ -337,13 +337,13 @@ func readTexCoordList(data []byte, count int) <-chan []TexCoord {
 		}
 
 		output <- tcs
-	}()
+	}(output)
 	return output
 }
 
 func readShaderList(data []byte, count int) <-chan []Shader {
 	output := make(chan []Shader)
-	go func() {
+	go func(output chan<- []Shader) {
 		var err error
 		shaders := make([]Shader, count)
 		r := bytes.NewReader(data)
@@ -368,7 +368,7 @@ func readShaderList(data []byte, count int) <-chan []Shader {
 		}
 
 		output <- shaders
-	}()
+	}(output)
 	return output
 }
 
