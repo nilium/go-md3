@@ -70,8 +70,7 @@ func Read(data []byte) (*Model, error) {
 	surfaceOutput := readSurfaceList(data[header.ofs_surfaces:], int(header.num_surfaces))
 	tagOutput := readTagList(data[header.ofs_tags:], int(header.num_tags))
 
-	completions := header.num_surfaces + 1
-	for completions > 0 {
+	for completions := header.num_surfaces + 1; completions > 0; completions-- {
 		select {
 		case surface := <-surfaceOutput:
 			if surface != nil {
@@ -80,7 +79,6 @@ func Read(data []byte) (*Model, error) {
 		case tags := <-tagOutput:
 			model.tags = tags
 		}
-		completions--
 	}
 
 	model.surfaces = surfaces
