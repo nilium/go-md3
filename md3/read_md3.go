@@ -67,6 +67,8 @@ func Read(data []byte) (*Model, error) {
 	model := new(Model)
 	surfaces := make([]*Surface, 0, 1)
 
+	model.name = header.name
+
 	surfaceOutput := readSurfaceList(data[header.ofs_surfaces:], int(header.num_surfaces))
 	tagOutput := readTagList(data[header.ofs_tags:], int(header.num_tags), int(header.num_frames))
 
