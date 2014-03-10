@@ -12,24 +12,16 @@ func dataForPath(path string) ([]byte, error) {
 	if path == "-" {
 		return ioutil.ReadAll(os.Stdin)
 	} else {
-		var buf []byte
-		var file *os.File
 		var err error
 
-		file, err = os.Open(path)
+		file, err := os.Open(path)
 		if err != nil {
 			return nil, err
 		}
 
-		buf, err = ioutil.ReadAll(file)
-		if err != nil {
-			if closeErr := file.Close(); closeErr != nil {
-				log.Println("Error closing file %q:", path, closeErr)
-			}
-			return buf, err
-		}
+		defer file.Close()
 
-		return buf, file.Close()
+		return ioutil.ReadAll(file)
 	}
 }
 
