@@ -76,7 +76,7 @@ func main() {
 
 	switch *appMode {
 	case convertMode:
-		panic("Unimplemented mode: convert")
+		modelOutput, doneProcessingModels = convertModelsToOBJ()
 	case viewMode:
 		panic("Unimplemented mode: view")
 	case specMode:
