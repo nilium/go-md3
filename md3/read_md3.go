@@ -64,8 +64,9 @@ func Read(data []byte) (*Model, error) {
 		return nil, err
 	}
 
+	numSurfaces := int(header.num_surfaces)
 	model := new(Model)
-	surfaces := make([]*Surface, 0, 1)
+	surfaces := make([]*Surface, 0, numSurfaces)
 
 	model.name = header.name
 
@@ -73,19 +74,14 @@ func Read(data []byte) (*Model, error) {
 	tagOutput := readTagList(data[header.ofs_tags:], int(header.num_tags), int(header.num_frames))
 	frameOutput := readFrameList(data[header.ofs_frames:], int(header.num_frames))
 
-	for completions := header.num_surfaces + 1; completions > 0; completions-- {
-		select {
-		case surface := <-surfaceOutput:
-			if surface != nil {
-				surfaces = append(surfaces, surface)
-			}
-		case tags := <-tagOutput:
-			model.tags = tags
-		case frames := <-frameOutput:
-			model.frames = frames
+	for surfIndex := 0; surfIndex < numSurfaces; surfIndex++ {
+		if surface := <-surfaceOutput; surface != nil {
+			surfaces = append(surfaces, surface)
 		}
 	}
 
+	model.tags = <-tagOutput
+	model.frames = <-frameOutput
 	model.surfaces = surfaces
 
 	return model, nil
