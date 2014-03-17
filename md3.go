@@ -23,9 +23,7 @@ const (
 )
 
 var (
-	appMode = flag.String("mode", defaultMode, "One of convert, spec, or view. [default=spec]")
-	flipUVs = flag.Bool("flipUVs", true, "Enables flipping UV coordinates vertically on output.")
-	swapYZ  = flag.Bool("swapYZ", true, "Enables swapping Y and Z axes on output.")
+	appMode = flag.String("mode", defaultMode, "One of convert, spec, or view.")
 )
 
 func dataForPath(path string) ([]byte, error) {

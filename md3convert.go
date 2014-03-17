@@ -13,7 +13,11 @@ import (
 
 const maxWriters = 8
 
-var outputPath = flag.String("o", ".", "Specify the output path for converted OBJ file(s). Do not include the extension. Defaults to '.'.")
+var (
+	outputPath = flag.String("o", ".", "Specify the output directory for converted OBJ file(s).")
+	flipUVs    = flag.Bool("flipUVs", true, "Enables flipping UV coordinates vertically on output.")
+	swapYZ     = flag.Bool("swapYZ", true, "Enables swapping Y and Z axes on output.")
+)
 
 type surfaceStringPair struct {
 	surface *md3.Surface
