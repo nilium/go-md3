@@ -10,6 +10,11 @@ import (
 	"os"
 )
 
+type modelPathPair struct {
+	model *md3.Model
+	path  string
+}
+
 const (
 	convertMode = "convert"
 	specMode    = "spec"
@@ -42,10 +47,10 @@ func dataForPath(path string) ([]byte, error) {
 func main() {
 	flag.Parse()
 
-	output := make(chan *md3.Model)
+	output := make(chan *modelPathPair)
 
 	for _, path := range flag.Args() {
-		go func(path string, output chan<- *md3.Model) {
+		go func(path string, output chan<- *modelPathPair) {
 			var model *md3.Model
 			var err error
 			var data []byte
@@ -62,11 +67,11 @@ func main() {
 				log.Printf("Error reading MD3 header %q:\n%s", path, err)
 			}
 
-			output <- model
+			output <- &modelPathPair{model, path}
 		}(path, output)
 	}
 
-	var modelOutput chan<- *md3.Model
+	var modelOutput chan<- *modelPathPair
 	var doneProcessingModels <-chan bool
 
 	switch *appMode {

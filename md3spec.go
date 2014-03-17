@@ -34,17 +34,17 @@ func logModelSpec(model *md3.Model) {
 	}
 }
 
-func logModelSpecsProcess(models <-chan *md3.Model, done chan<- bool) {
-	for model := range models {
-		logModelSpec(model)
+func logModelSpecsProcess(pairs <-chan *modelPathPair, done chan<- bool) {
+	for pair := range pairs {
+		logModelSpec(pair.model)
 	}
 
 	done <- true
 }
 
-func logModelSpecs() (chan<- *md3.Model, <-chan bool) {
+func logModelSpecs() (chan<- *modelPathPair, <-chan bool) {
 	done := make(chan bool)
-	input := make(chan *md3.Model)
+	input := make(chan *modelPathPair)
 
 	go logModelSpecsProcess(input, done)
 
