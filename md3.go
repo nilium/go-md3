@@ -10,49 +10,19 @@ import (
 	"os"
 )
 
-type appMode int
 
 const (
-	convertMode appMode = iota
-	specMode
-	viewMode
+	convertMode = "convert"
+	specMode    = "spec"
+	viewMode    = "view"
 	defaultMode = specMode
 )
 
-func (m appMode) String() string {
-	switch m {
-	case convertMode:
-		return "convert"
-	case specMode:
-		return "spec"
-	case viewMode:
-		return "view"
-	default:
-		return "invalid"
-	}
-}
-
-type appModeVar struct {
-	mode appMode
-}
-
-func (v *appModeVar) String() string {
-	return v.mode.String()
-}
-
-func (v *appModeVar) Set(value string) error {
-	switch value {
-	case "spec":
-		v.mode = specMode
-	case "view":
-		v.mode = viewMode
-	case "convert":
-		v.mode = convertMode
-	default:
-		return fmt.Errorf("Invalid mode flag: %q", value)
-	}
-	return nil
-}
+var (
+	appMode = flag.String("mode", defaultMode, "One of convert, spec, or view. [default=spec]")
+	flipUVs = flag.Bool("flipUVs", true, "Enables flipping UV coordinates vertically on output.")
+	swapYZ  = flag.Bool("swapYZ", true, "Enables swapping Y and Z axes on output.")
+)
 
 func dataForPath(path string) ([]byte, error) {
 	var r io.Reader
@@ -119,9 +89,6 @@ func logModelSpecs() (chan<- *md3.Model, <-chan bool) {
 }
 
 func main() {
-	mode := &appModeVar{defaultMode}
-
-	flag.Var(mode, "mode", "One of convert, spec, or view. [default=convert]")
 	flag.Parse()
 
 	output := make(chan *md3.Model)
@@ -151,13 +118,15 @@ func main() {
 	var modelOutput chan<- *md3.Model
 	var doneProcessingModels <-chan bool
 
-	switch mode.mode {
+	switch *appMode {
 	case convertMode:
 		panic("Unimplemented mode: convert")
 	case viewMode:
 		panic("Unimplemented mode: view")
 	case specMode:
 		modelOutput, doneProcessingModels = logModelSpecs()
+	default:
+		panic(fmt.Errorf("Invalid mode: %q", *appMode))
 	}
 
 	nargs := flag.NArg()
