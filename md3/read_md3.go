@@ -403,7 +403,7 @@ func readSurface(h *surfaceHeader, data []byte) (*Surface, error) {
 	triangleOutput := readTriangleList(data[h.ofs_triangles:], int(h.num_triangles))
 	shaderOutput := readShaderList(data[h.ofs_shaders:], int(h.num_shaders))
 	texcoordOutput := readTexCoordList(data[h.ofs_st:], int(h.num_verts))
-	verticesOutput := readVertexFrames(data[h.ofs_xyznormal:], int(h.num_frames), int(h.num_verts))
+	verticesOutput := readVertexFrames(data[h.ofs_xyznormal:], int(h.num_verts), int(h.num_frames))
 
 	surface.vertices = <-verticesOutput
 	surface.triangles = <-triangleOutput
