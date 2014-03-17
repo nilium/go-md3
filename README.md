@@ -17,9 +17,9 @@ The go-md3 tool has three modes and a few options that affect only specific mode
 
     Converts provided MD3 files to OBJ files. Each frame is written as a separate OBJ file, named as such: `<basename>+<frameNumber>.obj`. Takes a few options:
 
-    - `-flipUVs=[on|off]` — if on, the V texture coordinates will be flipped by writing them out as `(1.0 - V)`. This is helpful if you work in a system that doesn't play nice with OpenGL's texture coordinate space. Defaults to on.
+    - `-flipUVs=[true|false]` — if true, the V texture coordinates will be flipped by writing them out as `(1.0 - V)`. This is helpful if you work in a system that doesn't play nice with OpenGL's texture coordinate space. Defaults to true.
 
-    - `-swapYZ=[on|off]` — if on, the Y and Z axes are swapped for vertices and normals. Defaults to on.
+    - `-swapYZ=[true|false]` — if true, the Y and Z axes are swapped for vertices and normals. Defaults to true.
 
     - `-o=path/to/output` — sets the output directory for OBJ files. Defaults to the current directory (`.`).
 
