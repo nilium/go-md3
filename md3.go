@@ -94,5 +94,7 @@ func main() {
 
 	close(modelOutput)
 
-	<-doneProcessingModels
+	if doneProcessingModels != nil {
+		<-doneProcessingModels
+	}
 }
