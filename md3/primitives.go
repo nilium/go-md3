@@ -158,7 +158,7 @@ func readNulString(r io.Reader, maxLen int) (string, error) {
 		buf = buf[:index]
 	}
 
-	return bytes.NewBuffer(buf).String(), nil
+	return string(buf), nil
 }
 
 func readFixedString(r io.Reader, length int) (string, error) {
@@ -170,5 +170,5 @@ func readFixedString(r io.Reader, length int) (string, error) {
 		return "", fmt.Errorf("Couldn't read string of length %d, only got %d bytes", length, n)
 	}
 
-	return bytes.NewBuffer(buf).String(), nil
+	return string(buf), nil
 }
